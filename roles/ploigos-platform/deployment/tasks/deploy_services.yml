@@ -15,21 +15,39 @@
       definition: "{{ lookup('template', 'jenkins-rolebinding.yml.j2') | from_yaml }}"
   when: "'jenkins' in managed_services"
 
+## GitLab specifc tasks
+- name: Prep Tasks for GitLab system
+  block:  
+  - name: Create GitLab system namespace
+    k8s:
+      definition: '{{ lookup("template", "gitlab-system.yml.j2") }}'
+    when: lookup("template", "gitlab-system.yml.j2", errors='ignore')
+
+  - name: Create Cert Manager Subscription
+    k8s:
+      definition: '{{ lookup("template", "subscriptions/cert-manager.yml.j2") }}'
+    when: lookup("template", "subscriptions/cert-manager.yml.j2", errors='ignore')
+
+  - name: Apply Cert Manager Custom Resource
+    k8s:
+      definition: '{{ lookup("template", "custom-resources/cert-manager.yml.j2") }}'
+    register: deployment
+    until: not deployment.failed
+    retries: 5
+    delay: 10
+    when: lookup("template", "custom-resources/cert-manager.yml.j2", errors='ignore')
+  
+  - set_fact:
+     target_namespaces: "{{ target_namespaces + [item] }}"
+    with_items:
+     - gitlab-system
+
+  when: '"gitlab" in managed_services'
+
 # Operator-backed services
-- name: Get a list of operator groups
-  k8s_info:
-    api_version: operators.coreos.com/v1
-    kind: OperatorGroup
-    namespace: '{{ ploigos_namespace }}'
-  register: operator_groups
-
-- set_fact:
-    operator_group_name: '{{ operator_groups.resources[0].metadata.name }}'
-  when: operator_groups.resources
-
-- name: Ensure OperatorGroup exists
-  k8s:
-    definition: '{{ lookup("template", "operator-group.yml.j2") }}'
+- name: Install Operator Group
+  include_tasks: install_operatorgroup.yml
+  loop: '{{ target_namespaces }}'
 
 - name: 'Create Subscriptions'
   k8s:
@@ -52,3 +70,6 @@
     loop_var: operator_app
     label: operator_app
   when: lookup("template", "custom-resources/" + operator_app + ".yml.j2", errors='ignore')
+
+
+

@@ -78,6 +78,9 @@
     rhio_username: "{{ rhio_auth.split(':')[0] }}"
     rhio_token: "{{ rhio_auth.split(':')[1] }}"
 
+- name: Get values provided by custom resources
+  include_tasks: services_configure.yml
+
 - name: Deploy platform services
   include_tasks: deploy_services.yml
 
