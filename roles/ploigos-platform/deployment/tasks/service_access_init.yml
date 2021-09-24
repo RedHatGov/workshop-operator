@@ -31,6 +31,24 @@
           username: "{{ gitea_admin_secret.data.username | b64decode }}"
           password: "{{ gitea_admin_secret.data.password | b64decode }}"
 
+- name: Initialize managed GitLab details
+  when: '"gitlab" in managed_services'
+  block:
+  - set_fact:
+      gitlab_admin_secret: "{{ lookup('k8s', kind='Secret', namespace='gitlab-system', resource_name='gitlab-gitlab-initial-root-password') }}"
+    until: gitlab_admin_secret
+    retries: 30
+    delay: 5
+
+  - set_fact:
+      all_services_details: "{{ all_services_details | combine(_gitlab_details) }}"
+    vars:
+      _gitlab_details:
+        gitlab:
+          url: "https://gilab.apps.{{ full_cluster_name }}"
+          username: "root"
+          password: "{{ gitlab_admin_secret.data.password | b64decode }}"         
+
 - name: Initialize managed Jenkins details
   when: '"jenkins" in managed_services'
   set_fact:

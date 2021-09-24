@@ -7,6 +7,19 @@
     oc delete -n {{ ploigos_namespace }} secret ploigos-platform-config-secrets || true
     oc delete -n {{ ploigos_namespace }} cm ploigos-platform-config || true
 
+- name: Get values provided by custom resources
+  include_tasks: services_configure.yml
+
+## GitLab specifc task
+- name: Tasks for GitLab removal
+  block:  
+  - name: Delete Cert Manager Custom Resource
+    k8s:
+      definition: '{{ lookup("template", "custom-resources/cert-manager.yml.j2") }}'
+      state: absent
+    when: lookup("template", "custom-resources/cert-manager.yml.j2", errors='ignore')
+  when: '"gitlab" in managed_services'
+
 - name: Remove CustomResources
   k8s:
     definition: '{{ lookup("template", "custom-resources/" + operator_app + ".yml.j2") }}'
