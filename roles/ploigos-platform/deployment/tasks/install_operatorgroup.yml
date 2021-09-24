@@ -5,11 +5,13 @@
     namespace: '{{ item }}'
   register: operator_groups
 
-- set_fact:
+- name: Set operator group name
+  set_fact:
     operator_group_name: '{{ operator_groups.resources[0].metadata.name }}'
   when: operator_groups.resources
 
-- set_fact:
+- name: Set operator group namespace
+  set_fact:
     og_namespace: '{{ item }}'
 
 - name: Ensure OperatorGroup exists

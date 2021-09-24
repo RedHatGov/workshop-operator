@@ -184,6 +184,8 @@ spec:
                                 - url
                                 - username
                                 - password
+                            required:
+                            - values
                       artifactRepository:
                         description: Describes the service used as an artifact repository.
                         type: object

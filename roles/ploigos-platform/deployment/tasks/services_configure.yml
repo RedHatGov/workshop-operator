@@ -27,9 +27,9 @@
     service_values: "{{ _gitlab_values | combine(service_values, recursive=true) }}"
   vars:
     _gitlab_values:
-        gitlab:
-          chart_version: "5.3.0"
-          email: "email@example.com"
+      gitlab:
+        chart_version: "5.3.0"
+        email: "email@redhat.com"
 
 - name: Initialize custom resource Jenkins details
   when: '"jenkins" in managed_services'
@@ -61,7 +61,7 @@
     service_values: "{{ _nexus_containers_values | combine(service_values, recursive=true) }}"
   vars:
     _nexus_containers_values:
-        nexus_containers: {}
+      nexus_containers: {}
 
 - name: Initialize custom resource Sonarqube details
   when: '"sonarqube" in managed_services'
